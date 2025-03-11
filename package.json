@@ -1,20 +1,22 @@
 {
   "name": "calculations_bot",
-  "version": "1.0.0",  
+  "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",  
-    "dev": "nodemon index.js"  
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "axios": "^1.8.2",
     "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "cors": "^2.8.5",
+    "ngrok": "^5.0.0-beta.2",
     "node-fetch": "^3.3.2",
     "node-telegram-bot-api": "^0.66.0"
   },
