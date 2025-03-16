@@ -9,7 +9,7 @@ require('dotenv').config();  // Load .env variables
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const SERVER_URL = process.env.SERVER_URL;
 const port = process.env.PORT || 8443;
-const url = 'https://bf5c-89-216-209-214.ngrok-free.app';
+const url = 'https://0e02-89-216-209-214.ngrok-free.app';
 
 const userStates = {};
 
@@ -24,20 +24,46 @@ const userStates = {};
         const bot = new TelegramBot(token, { webHook: { port: port } });
 
         // Command: /start (Main Menu)
-        bot.onText(/\/start/, (msg) => {
-            const chatId = msg.chat.id;
-            userStates[chatId] = { state: 'main_menu' };
-            bot.sendMessage(chatId, "\uD83D\uDD14 Notification\n\nPlease choose an option:", {
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: '\uD83D\uDCC5 Book', callback_data: 'book' }],
-                        [{ text: '\uD83D\uDCD6 Learn Conditions', callback_data: 'learn' }],
-                        [{ text: '\uD83C\uDFE2 About the Company', callback_data: 'about' }],
-                        [{ text: '\uD83D\uDCDE Need help', callback_data: 'help' }]
-                    ]
-                }
-            });
-        });
+        bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
+    const chatId = msg.chat.id;
+    const realTelegramId = msg.from.id;
+    const referralId = match && match[1] ? parseInt(match[1].trim(), 10) || null : null;
+    const username = msg.from.username || 'N/A';
+    console.log(referralId);
+
+    // Construct payload for the server
+    const payload = {
+        referral_id: referralId,
+        real_telegram_id: realTelegramId,
+        username: username
+    };
+
+    try {
+        const response = await axios.post(`${SERVER_URL}/connect-client`, payload);
+        console.log('Referral data sent successfully:', response.data);
+        
+        bot.sendMessage(chatId, referralId 
+    ? `This is your referral number: **${referralId}**` 
+    : `No referral number detected.`, { parse_mode: "Markdown" });
+    } catch (error) {
+        console.error('Error sending referral data:', error);
+        bot.sendMessage(chatId, 'There was an error processing your referral information.');
+    }
+
+    // Continue with the main menu
+    userStates[chatId] = { state: 'main_menu' };
+    bot.sendMessage(chatId, "\uD83D\uDD14 Notification\n\nPlease choose an option:", {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: '\uD83D\uDCC5 Book', callback_data: 'book' }],
+                [{ text: '\uD83D\uDCD6 Learn Conditions', callback_data: 'learn' }],
+                [{ text: '\uD83C\uDFE2 About the Company', callback_data: 'about' }],
+                [{ text: '\uD83D\uDCDE Need help', callback_data: 'help' }]
+            ]
+        }
+    });
+});
+
 
         // Handle all callback queries for inline buttons
         bot.on('callback_query', (query) => {
@@ -295,6 +321,18 @@ const userStates = {};
         });
 
         // Command: /help
+        bot.onText(/\/help/, (msg) => {
+            const chatId = msg.chat.id;
+            const helpMessage = `Available commands:
+            
+            /start - Start the bot
+            /help - Show this help message
+            /echo <text> - Echo back your text
+            /getusers - Get the list of users
+            /adduser - Add a new user`;
+            bot.sendMessage(chatId, helpMessage);
+        });
+
         bot.onText(/\/help/, (msg) => {
             const chatId = msg.chat.id;
             const helpMessage = `Available commands:
